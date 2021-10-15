@@ -4,4 +4,4 @@ copernicus_publication.upload_publication:
     _form: '\Drupal\copernicus_publication\Form\UploadPublicationForm'
     _title: 'Upload publication'
   requirements:
-    _permission: 'create publication content'
+    _permission: 'administer publication'
