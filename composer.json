@@ -6,7 +6,7 @@
     "minimum-stability": "dev",
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@gitlab.edw.ro:ecmwf/copernicus_publication.git"
         }
     ],
