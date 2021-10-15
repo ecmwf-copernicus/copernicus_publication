@@ -1,0 +1,25 @@
+{
+    "name": "drupal/copernicus_publication",
+    "type": "drupal-module",
+    "description": "Copernicus publication",
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@gitlab.edw.ro:ecmwf/copernicus_publication.git"
+        }
+    ],
+    "support": {
+        "source": "https://gitlab.edw.ro/ecmwf/copernicus_publication"
+    },
+    "authors": [
+        {
+            "name": "Daniela Eremia",
+            "email": "daniela.eremia@eaudeweb.ro"
+        }
+    ],
+    "require": {
+        "linuskohl/phpdatacite": "dev-master"
+    }
+}

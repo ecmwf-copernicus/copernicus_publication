@@ -1,0 +1,4 @@
+services:
+  copernicus_publication.upload_publication:
+    class: Drupal\copernicus_publication\Services\PublicationService
+    arguments: ['@current_user', '@entity_type.manager','@http_client', '@logger.factory']

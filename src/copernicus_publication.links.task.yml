@@ -1,0 +1,5 @@
+copernicus_publication.upload_publication:
+  route_name: copernicus_publication.upload_publication
+  title: 'Upload publication'
+  base_route: system.admin_content
+  weight: 101
