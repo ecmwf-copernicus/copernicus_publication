@@ -1,7 +1,7 @@
 {
     "name": "drupal/copernicus_publication",
     "type": "drupal-module",
-    "description": "Copernicus publication",
+    "description": "Drupal module to manage publications\n\n",
     "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
     "repositories": [

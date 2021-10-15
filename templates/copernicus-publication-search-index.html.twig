@@ -1,0 +1,42 @@
+<div class="publication-page search-index">
+  <div class="publication-header small">
+        <span class="publication-type">
+            {{ publication.type }}
+        </span>,
+    <span class="published-date">
+            {{ publication.date }}
+        </span>
+  </div>
+
+  <h3><a href="{{ url }}" rel="bookmark">{{ label }}</a></h3>
+  <hr>
+
+  <div class="publication-authors">
+    <span class="label">Authors:</span> {{ publication.authors }}
+  </div>
+  {% if publication.keywords|render|striptags|trim is not empty %}
+    <div class="publication-keywords">
+      <span class="label">Keywords:</span> {{ publication.keywords }}
+    </div>
+  {% endif %}
+
+  {% if publication.abstract|render|striptags|trim is not empty %}
+    <div class="publication-abstract rich-text">
+      {{ publication.abstract }}
+    </div>
+  {% endif %}
+
+  <div class="download-links">
+    {% if publication.download|render|striptags|trim is not empty %}
+      <div class="publication-download">
+        {{ publication.download }}
+      </div>
+    {% endif %}
+
+    {% if publication.doi|render|striptags|trim is not empty %}
+      <div class="publication-doi">
+        <i class=""></i>{{ publication.doi }}
+      </div>
+    {% endif %}
+  </div>
+</div>

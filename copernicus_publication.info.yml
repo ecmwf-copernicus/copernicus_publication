@@ -2,6 +2,11 @@ name: Copernicus Publication
 description: Drupal module to manage publications.
 type: module
 core: 8.x
-package: custom
+package: publication
 dependencies:
+  - drupal:views
+  - facets
+  - entity_browser
+  - doi
   - copernicus_author
+  - chosen:chosen_lib

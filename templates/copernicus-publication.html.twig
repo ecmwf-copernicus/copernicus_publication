@@ -1,0 +1,63 @@
+{#{% include "@components/publication-page.twig" %}#}
+
+<main id="maincontent" class="main--content with-sidebar">
+  <section class="main--section">
+    <div class="publication-page full">
+      <div class="download-links">
+        {% if publication.download|render|striptags|trim is not empty %}
+          <div class="publication-download">
+            {{ publication.download }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="publication-authors">
+        <span class="label">{{ 'Authors'|t }}:</span> {{ publication.authors }}
+      </div>
+      <hr>
+      {% if publication.abstract|render|striptags|trim is not empty %}
+        <div class="publication-abstract">
+          {{ publication.abstract }}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+  <aside class="sidebar">
+    <div class="region region--section_menu">
+      <div class="publication-page sidebar publication-page-sidebar">
+        <div class="published-date element">
+          <div class="label">{{ 'Publication date'|t }}:</div>
+          <div class="value"> {{ publication.date }}</div>
+        </div>
+        <div class="publication-type element">
+          <div class="label">{{ 'Type'|t }}:</div>
+          <div class="value"> {{ publication.type }}</div>
+        </div>
+        {% if publication.field_publication_publisher|render %}
+          <div class="publication-publisher element">
+            <div class="label">{{ 'Publisher'|t }}:</div>
+            <div class="value"> {{ publication.field_publication_publisher }}</div>
+          </div>
+        {% endif %}
+        {% if publication.keywords|render|striptags|trim is not empty %}
+          <div class="publication-keywords element">
+            <div class="label">{{ 'Keywords'|t }}:</div>
+            <div class="value">{{ publication.keywords }}</div>
+          </div>
+        {% endif %}
+        {% if publication.doi|render is not empty %}
+          <div class="publication-doi element">
+            <div class="label">{{ 'DOI'|t }}:</div>
+            <div class="">{{ publication.doi }}</div>
+          </div>
+        {% endif %}
+        <div class="publication-permalink element">
+          <div class="label">{{ 'Link'|t }}:</div>
+          <div class="value">
+            <a href="{{ url }}">{{ 'Permanent link'|t }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>

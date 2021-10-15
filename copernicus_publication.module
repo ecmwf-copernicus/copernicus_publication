@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * @file
+ * Copernicus publication module.
+ */
+
+use Drupal\Core\Link;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_theme().
+ */
+function copernicus_publication_theme($existing, $type, $theme, $path) {
+    return [
+        'copernicus_publication' => [
+            'render element' => 'elements',
+        ],
+        'copernicus_publication_teaser' => [
+            'render element' => 'elements',
+        ],
+        'copernicus_publication_search_index' => [
+            'render element' => 'elements',
+        ],
+        'page_title_publication' => [
+            'variables' => ['title' => NULL],
+        ],
+    ];
+}
+
+/**
+ * Implements hook_preprocess.
+ */
+function copernicus_publication_preprocess(&$variables, $hook) {
+    if ($hook !== 'copernicus_publication') {
+        return;
+    }
+
+    $variables['publication'] = [];
+
+    foreach (Element::children($variables['elements']) as $key) {
+        $variables['publication'][$key] = $variables['elements'][$key];
+    }
+
+    $entity = $variables['elements']['#copernicus_publication'];
+
+    $variables['label'] = $entity->label();
+    $variables['url'] = $entity->toUrl()->toString();
+
+    $variables['view_mode'] = $variables['elements']['#view_mode'];
+    $variables['teaser'] = $variables['view_mode'] === 'teaser';
+    $variables['search_index'] = $variables['view_mode'] === 'search_index';
+}
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ */
+function copernicus_publication_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
+    switch ($hook) {
+        case 'copernicus_publication':
+            if (empty($variables['elements']['#view_mode'])) {
+                return;
+            }
+
+            if (empty($variables['elements']['#copernicus_publication'])) {
+                return;
+            }
+
+            $suggestions[] = 'copernicus_publication_' . $variables['elements']['#view_mode'];
+            break;
+
+        case 'page_title':
+            /** @var \Drupal\Core\Routing\RouteMatchInterface $route_match */
+            $route_match = \Drupal::routeMatch();
+            if (in_array($route_match->getRouteName(), [
+                'copernicus_publication.canonical',
+                'view.search.publication',
+            ])) {
+                $suggestions[] = 'page_title__publication';
+            }
+
+            break;
+    }
+
+    $suggestions = array_unique($suggestions);
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function copernicus_publication_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+    switch ($form['#id']) {
+        case 'node-publication-edit-form':
+        case 'node-publication-form':
+            chosen_attach_library($form);
+            break;
+    }
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function copernicus_publication_preprocess_pager(array &$variables) {
+    switch (\Drupal::routeMatch()->getRouteName()) {
+        case 'view.search.publication':
+            unset($variables['items']['first'], $variables['items']['last']);
+            break;
+    }
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function copernicus_publication_system_breadcrumb_alter(\Drupal\Core\Breadcrumb\Breadcrumb &$breadcrumb, \Drupal\Core\Routing\RouteMatchInterface $route_match, array $context) {
+    switch ($route_match->getRouteName()) {
+        case 'entity.node.canonical':
+            if ($route_match->getParameter('node')->bundle() != 'publication') {
+                return;
+            }
+            $breadcrumb->addLink(new Link('<  ' . t('Back to search results'), Url::fromRoute('view.search.publication')));
+            break;
+    }
+
+}
