@@ -137,6 +137,43 @@ class PublicationService {
   CONST ERROR_RESPONSE_NOT_FOUND = 404;
   CONST ERROR_SCHEMA = 422; // wrong schema
 
+  CONST ALLOWED_RESOURCE_TYPE_GENERAL = [
+    ResourceType::TYPE_RESOURCE_Audiovisual,
+    'Book',
+    'Book chapter',
+    ResourceType::TYPE_RESOURCE_Collection,
+    'Computational notebook',
+    'Conference paper',
+    'Conference proceeding',
+    ResourceType::TYPE_RESOURCE_DataPaper,
+    ResourceType::TYPE_RESOURCE_Dataset,
+    'Dissertation',
+    ResourceType::TYPE_RESOURCE_Event,
+    ResourceType::TYPE_RESOURCE_Image,
+    ResourceType::TYPE_RESOURCE_InteractiveResource,
+    'Journal',
+    'Journal article',
+    ResourceType::TYPE_RESOURCE_Model,
+    'Output management plan',
+    ResourceType::TYPE_RESOURCE_Other,
+    'Peer review',
+    ResourceType::TYPE_RESOURCE_PhysicalObject,
+    'Preprint',
+    'Report',
+    ResourceType::TYPE_RESOURCE_Service,
+    ResourceType::TYPE_RESOURCE_Software,
+    ResourceType::TYPE_RESOURCE_Sound,
+    'Standard',
+    ResourceType::TYPE_RESOURCE_Text,
+    ResourceType::TYPE_RESOURCE_Workflow,
+  ];
+  CONST ALLOWED_TITLE_TYPES = [
+    Title::TYPE_AlternativeTitle,
+    Title::TYPE_Subtitle,
+    Title::TYPE_TranslatedTitle,
+    Title::TYPE_Other
+  ];
+
   public function __construct(AccountInterface $account, EntityTypeManagerInterface $entityTypeManager, Client $client, LoggerChannelFactoryInterface $loggerFactory) {
     $this->account = $account;
     $this->client = $client;
@@ -359,6 +396,11 @@ class PublicationService {
       }
       $title->setText($titleText);
       if ($titleType = $value->attributes()->titleType) {
+        if (!in_array($titleType, self::ALLOWED_TITLE_TYPES)) {
+          \Drupal::messenger()->addError('Title type is wrong.');
+          $this->validXML = FALSE;
+        }
+
         $title->setTitleType($this->trim($titleType));
       }
       $title->setLang($this->trim($value->lang));
@@ -385,6 +427,11 @@ class PublicationService {
     $resourceTypeGeneral = $this->trim($values->attributes()->resourceTypeGeneral);
     if (!$resourceTypeGeneral) {
       \Drupal::messenger()->addError('Resource type general is required.');
+      $this->validXML = FALSE;
+    }
+
+    if (!in_array($resourceTypeGeneral, self::ALLOWED_RESOURCE_TYPE_GENERAL)) {
+      \Drupal::messenger()->addError('Attribute "resourceTypeGeneral" from <resourceType> is not valid.');
       $this->validXML = FALSE;
     }
     $resourceType->setSesourceTypeGeneral($resourceTypeGeneral);
