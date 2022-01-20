@@ -48,6 +48,9 @@ class PublicationService {
   /** @var \Drupal\Core\Entity\EntityStorageInterface */
   protected $authorStorage;
 
+  /** @var \Drupal\taxonomy\TermStorageInterface */
+  protected $termStorage;
+
   /** @var Client */
   protected $client;
 
@@ -182,6 +185,8 @@ class PublicationService {
     $this->entityTypeManager = $entityTypeManager;
     $this->authorStorage = $this->entityTypeManager
       ->getStorage('copernicus_author');
+    $this->termStorage = $this->entityTypeManager
+      ->getStorage('taxonomy_term');
     $this->setRepositoryId();
   }
 
@@ -834,6 +839,8 @@ class PublicationService {
     $creators = $this->getCreators($this->resource->creators);
     $keywords = $this->resource->subjects ? $this->getKeywords($this->resource->subjects) : [];
     $date = date('Y-m-d', strtotime($this->resource->publicationYear));
+    $publicationType = $this->termStorage->loadByProperties(['name' => 'Documentation', 'vid' => 'publication_types']);
+    $publicationType = ($publicationType) ? reset($publicationType) : NULL;
     $node = Node::create([
       'type' => 'publication',
       'title' => $title->getTitle(),
@@ -851,7 +858,7 @@ class PublicationService {
       'field_start_date' => $date,
       'field_publication_publisher' => $this->resource->publisher,
       // @TODO
-      'field_type' => ['target_id' => 49],
+      'field_type' => ['target_id' => ($publicationType) ? $publicationType->id() : ''],
     ]);
 
     /** @var \Drupal\Core\Entity\EntityConstraintViolationListInterface $errors */
