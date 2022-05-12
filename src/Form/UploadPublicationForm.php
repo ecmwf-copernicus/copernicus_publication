@@ -3,6 +3,7 @@
 namespace Drupal\copernicus_publication\Form;
 
 use Drupal\copernicus_publication\Services\PublicationService;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Entity\File;
@@ -13,13 +14,22 @@ class UploadPublicationForm extends FormBase {
   /** @var PublicationService */
   protected $publicationService;
 
-  public function __construct(PublicationService $publicationService) {
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  public function __construct(PublicationService $publicationService, ModuleHandlerInterface $moduleHandler) {
     $this->publicationService  = $publicationService;
+    $this->moduleHandler = $moduleHandler;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('copernicus_publication.upload_publication')
+      $container->get('copernicus_publication.upload_publication'),
+      $container->get('module_handler')
     );
   }
 
@@ -43,6 +53,21 @@ class UploadPublicationForm extends FormBase {
           '#markup' => $this->t("Use this screen to create a new publication.
           You can create the publication in both Drupal and DataCite Fabrica at the same time.</br>
           If you wish to create only in Drupal, use the checkbox below."),
+        ],
+      ],
+      1 => [
+        '#type' => 'container',
+        '#weight' => 3,
+        'image' => [
+          '#theme' => 'image',
+          '#uri' => $this->moduleHandler->getModule('copernicus_publication')->getPath() . '/img/ecmwf.png',
+          '#width' => 500,
+        ],
+        'message' => [
+          '#type' => 'markup',
+          '#markup' => $this->t("<br/><b>You need the BibTeX XML file without
+completed the DOI URL because it will be automatically created during the upload. After creating the record,
+you will manually attach the PDF file to the newly created publication node.</b>"),
         ],
       ],
     ];
