@@ -52,22 +52,7 @@ class UploadPublicationForm extends FormBase {
           '#type' => 'markup',
           '#markup' => $this->t("Use this screen to create a new publication.
           You can create the publication in both Drupal and DataCite Fabrica at the same time.</br>
-          If you wish to create only in Drupal, use the checkbox below."),
-        ],
-      ],
-      1 => [
-        '#type' => 'container',
-        '#weight' => 3,
-        'image' => [
-          '#theme' => 'image',
-          '#uri' => $this->moduleHandler->getModule('copernicus_publication')->getPath() . '/img/ecmwf.png',
-          '#width' => 500,
-        ],
-        'message' => [
-          '#type' => 'markup',
-          '#markup' => $this->t("<br/><b>You need the BibTeX XML file without
-completed the DOI URL because it will be automatically created during the upload. After creating the record,
-you will manually attach the PDF file to the newly created publication node.</b>"),
+          If you wish to create the publication only in Drupal, use the checkbox below. Upload the metadata file, then attach the PDF file by editing the new node."),
         ],
       ],
     ];
@@ -153,6 +138,22 @@ you will manually attach the PDF file to the newly created publication node.</b>
           'required' => [
             ':input[name="drupal_only"]' => ['checked' => FALSE],
           ],
+        ],
+      ],
+      'message' => [
+        '#type' => 'markup',
+        '#prefix' => $this->t('<h2>How it works</h2>'),
+        '#markup' => $this->t("<b>Upload the BibTeX XML file without
+the DOI URL filled in because it will be automatically generated during the upload. After the node is created,
+you will manually attach the PDF file to the newly created publication node.</b>"),
+      ],
+      1 => [
+        '#type' => 'container',
+        '#weight' => 3,
+        'image' => [
+          '#theme' => 'image',
+          '#uri' => $this->moduleHandler->getModule('copernicus_publication')->getPath() . '/img/ecmwf.png',
+          '#width' => 500,
         ],
       ],
     ];
