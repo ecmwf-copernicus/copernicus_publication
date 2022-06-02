@@ -310,21 +310,41 @@ class PublicationService {
   }
 
   protected function setIdentifier($values) {
-    $doi = (string)$values;
-    $doi = strtolower($doi);
     $identifier = new Identifier();
-    $identifier->setIdentifierType($this->trim($values->attributes()->identifierType));
-    $identifier->setIdentifier($doi);
+    $doi = (string)$values;
+    if ($this->prefix) {
+      $suffix = $this->suffix ?? $this->generateSuffix();
+      $this->setSuffix($suffix);
+      $doi = "$this->prefix/$this->suffix";
+    }
+    $doi = strtolower($doi);
+    $identifierType = !empty($values->attributes()->identifierType) ? $this->trim($values->attributes()->identifierType) : 'DOI';
+    $identifier->setIdentifierType($identifierType);
     $this->resource->setIdentifier($identifier);
-    $doiIdentifier = explode('/', $doi);
-    $this->setPrefix($doiIdentifier[0]);
-    $this->setSuffix($doiIdentifier[1]);
+    // If "Create the publication only in Drupal"
+    if (!$this->prefix) {
+      if (empty($doi)) {
+        $this->validXML = FALSE;
+        \Drupal::messenger()->addError($this->trim('If you create the DOI only in Drupal, at least a valid prefix is required.'));
+      }
+      $doiIdentifier = explode('/', $doi);
+      $this->setPrefix($doiIdentifier[0]);
+      if (empty($doiIdentifier[1])) {
+        $doiIdentifier[1] = $this->generateSuffix();
+      }
+      $this->setSuffix($doiIdentifier[1]);
+      $doi = "$this->prefix/$this->suffix";
+    }
+    $identifier->setIdentifier($doi);
   }
 
   /**
-   * Generate fake suffix. Only for testing purposes.
+   * Generate a unique suffix.
+   *
+   * @return string
+   *   A unique suffix.
    */
-  public function setFakeIdentifier() {
+  public function generateSuffix() {
     $pool = 'abcdefghijklmnopqrstuvwxyz0123456789';
     $suffix = '';
     for ($i = 0; $i < 9; $i++) {
@@ -335,7 +355,24 @@ class PublicationService {
       $position = mt_rand(0, strlen($pool));
       $suffix .= substr($pool, $position, 1);
     }
+    if (!$this->prefix) {
+      return;
+    }
+    $doiId = $this->prefix . '/' . $suffix;
+    // Check if this random id already exist.
+    $response = $this->getActivityForDoi($doiId);
+    if ($response->data) {
+      $this->generateSuffix();
+    }
+    return $suffix;
+  }
+
+  /**
+   * Generate fake suffix. Only for testing purposes.
+   */
+  public function setFakeIdentifier() {
     $this->setPrefix(10.82044);
+    $suffix = $this->generateSuffix();
     $this->setSuffix($suffix);
     $fakeIdentifier = $this->prefix . '/' . $this->suffix;
     $this->resource->identifier->setIdentifier($fakeIdentifier);
@@ -637,10 +674,6 @@ class PublicationService {
       switch ($key) {
         case 'identifier':
           $this->setIdentifier($values);
-          if (!$values) {
-            \Drupal::messenger()->addError('DOI identifier missing');
-            $this->validXML = FALSE;
-          }
           break;
         case 'creators':
           $this->setCreators($values);
@@ -833,6 +866,25 @@ class PublicationService {
     }
   }
 
+  /**
+   * Returns a list of client-prefixes.
+   * Endpoint: DATACITE_API_URL/client-prefixes.
+   *
+   * @return array
+   *   List with prefixes.
+   */
+  public function getClientPrefixes() {
+    $url = $this->getEndpointUrl(self::CLIENTS_ENDPOINT, $this->repositoryId);
+    $response = $this->client->get($url)->getBody()->getContents();
+    $response = json_decode($response);
+
+    $prefixes = [];
+    foreach ($response->data->relationships->prefixes->data as $prefix) {
+      $prefixes[$prefix->id] = $prefix->id;
+    }
+    return $prefixes;
+  }
+
   public function createNode(): bool {
     /** @var Title $title */
     $title = reset($this->resource->titles);
@@ -854,10 +906,9 @@ class PublicationService {
       ],
       'field_authors' => $creators,
       'field_doi' => $this->resource->getIdentifier()->identifier,
-      'field_keywords' => $keywords, //subjects
+      'field_keywords' => $keywords,
       'field_start_date' => $date,
       'field_publication_publisher' => $this->resource->publisher,
-      // @TODO
       'field_type' => ['target_id' => ($publicationType) ? $publicationType->id() : ''],
     ]);
 
@@ -921,7 +972,11 @@ class PublicationService {
     /** @var Subject $subject */
     foreach ($subjects as $subject) {
       $title = $subject->getSubject();
-      $term = taxonomy_term_load_multiple_by_name($title);
+      $term = $this->entityTypeManager->getStorage('taxonomy_term')
+        ->loadByProperties([
+          'name' => $title,
+          'vid' => 'publication_keywords'
+        ]);
       if ($term) {
         $term = reset($term);
         $tids[] = $term->id();

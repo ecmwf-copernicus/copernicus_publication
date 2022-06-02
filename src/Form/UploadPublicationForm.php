@@ -44,6 +44,9 @@ class UploadPublicationForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+    $form['#prefix'] = '<div id="datacite-fabrica-configuration">';
+    $form['#suffix'] = '</div>';
     $form['info'] = [
       0 => [
         '#type' => 'container',
@@ -89,6 +92,7 @@ class UploadPublicationForm extends FormBase {
       'draft' => $this->t('Draft - DOI can be deleted'),
       'publish' => $this->t('Findable - Indexed in DataCite Search (DOI can\'t be deleted)'),
     ];
+    $clientPrefixes = $this->publicationService->getClientPrefixes();
     $form['datacite_fabrica'] = [
       '#type' => 'container',
       '#attributes' => [
@@ -121,6 +125,38 @@ class UploadPublicationForm extends FormBase {
         '#title' => t('DOI State in DataCite Fabrica'),
         '#default_value' => 'draft',
         '#options' => $options,
+      ],
+      'doi_id' => [
+        '#type' => 'container',
+        'doi_prefix' => [
+          '#type' => 'select',
+          '#title' => t('Prefix'),
+          '#default_value' => reset($clientPrefixes),
+          '#options' => $clientPrefixes,
+          '#required' => TRUE,
+          '#ajax' => [
+            'callback' => '::doiSuffixSuggestionCallback',
+            'wrapper' => 'datacite-fabrica-configuration',
+            'effect' => 'fade',
+            'method' => 'replace',
+            'event' => 'change',
+          ],
+        ],
+        'doi_suffix' => [
+          '#type' => 'textfield',
+          '#title' => $this->t('DOI Suffix'),
+          '#description' => $this->t('Refresh the page or leave empty for a new random suffix, or delete the random suffix and enter a value manually.'),
+          '#placeholder' => 'e.g: KSLD-qOrq',
+          '#value' => $form_state->getUserInput()['doi_suffix'] ?? $this->publicationService->generateSuffix(),
+          '#size' => 25,
+          '#ajax' => [
+            'callback' => '::doiSuffixSuggestionCallback',
+            'wrapper' => 'datacite-fabrica-configuration',
+            'effect' => 'fade',
+            'method' => 'replace',
+            'event' => 'change',
+          ],
+        ],
       ],
       'user' => [
         '#type' => 'textfield',
@@ -176,6 +212,9 @@ you will manually attach the PDF file to the newly created publication node.</b>
       $pass = $form_state->getValues()['password'];
       $this->publicationService->setAuthorizationId($pass);
       $this->publicationService->setState($state);
+      $this->publicationService->setPrefix($form_state->getValue('doi_prefix'));
+      $suffix = !empty($form_state->getValue('doi_suffix')) ? $form_state->getValue('doi_suffix') : $this->publicationService->generateSuffix();
+      $this->publicationService->setSuffix($suffix);
     }
     $this->publicationService->setResourceFromXML($path);
 
@@ -201,5 +240,31 @@ you will manually attach the PDF file to the newly created publication node.</b>
       // Update DOI to add Url to node.
       $this->publicationService->updateDoiUrl();
     }
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if (!$form_state->getValue('drupal_only')) {
+      $prefix = $form_state->getValue('doi_prefix');
+      if (!$prefix) {
+        $form_state->setErrorByName('doi_prefix', $this->t('DOI prefix is required!'));
+      }
+      $suffix = $form_state->getUserInput()['doi_suffix'];
+      $doiId = "{$prefix}/{$suffix}";
+      $response = $this->publicationService->getActivityForDoi($doiId);
+      if ($response->data) {
+        $message = 'You tried to create a DOI but the suffix you chose is already used for this prefix.';
+        $form_state->setErrorByName('doi_suffix', $message);
+      }
+    }
+  }
+
+  /**
+   * Ajax callback for a new DOI Suffix.
+   */
+  public function doiSuffixSuggestionCallback(array &$form, FormStateInterface $form_state) {
+    $suffix = $form_state->getUserInput()['doi_suffix'] ?? $this->publicationService->generateSuffix();
+    $form_state->setValue('doi_suffix', $suffix);
+
+    return $form;
   }
 }
