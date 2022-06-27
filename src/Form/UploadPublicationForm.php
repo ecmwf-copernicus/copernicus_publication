@@ -40,6 +40,8 @@ class UploadPublicationForm extends FormBase {
     return 'upload-publication-node-form';
   }
 
+
+
   /**
    * {@inheritdoc}
    */
@@ -71,7 +73,7 @@ class UploadPublicationForm extends FormBase {
       '#multiple' => FALSE,
       '#default_value' => '',
       '#upload_validators' => [
-        'file_validate_extensions' => ['xml'],
+        'file_validate_extensions' => ['xml']
       ],
     ];
     $form['warning'] = [
@@ -244,6 +246,7 @@ you will manually attach the PDF file to the newly created publication node.</b>
 
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (!$form_state->getValue('drupal_only')) {
+
       $prefix = $form_state->getValue('doi_prefix');
       if (!$prefix) {
         $form_state->setErrorByName('doi_prefix', $this->t('DOI prefix is required!'));
