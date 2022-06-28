@@ -10,8 +10,9 @@ use Drupal\Core\Ajax\CommandInterface;
 class ManagedFileUploadCompleteEventCommand implements CommandInterface {
 
   // Constructs a ReadMessageCommand object.
-  public function __construct($prefix = null) {
+  public function __construct($prefix = null, $suffix = null) {
     $this->prefix = $prefix;
+    $this->suffix = $suffix;
   }
 
   /**
@@ -20,7 +21,8 @@ class ManagedFileUploadCompleteEventCommand implements CommandInterface {
   public function render() {
     return [
       'command' => 'triggerManagedFileUploadComplete',
-      'prefix' => $this->prefix
+      'prefix' => (string) $this->prefix,
+      'suffix' => (string) $this->suffix,
     ];
   }
 
