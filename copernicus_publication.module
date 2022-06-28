@@ -153,27 +153,34 @@ function copernicus_publication_managed_file_ajax_callback(array &$form, \Drupal
   // Retrieve the original response.
   $response = \Drupal\file\Element\ManagedFile::uploadAjaxCallback($form, $form_state, \Drupal::request());
 
-  if (!$form_state->hasAnyErrors()) {
-    $fid = reset($form_state->getValue('file'));
-    $file = \Drupal\file\Entity\File::load($fid);
-    $path = $file->getFileUri();
-    $xml = simplexml_load_string(file_get_contents($path));
-    // \Drupal::logger('file_ajax_callback')->notice( $xml->identifier);
-    if (!empty($xml->identifier)) { // empty tab
-      if (str_contains($xml->identifier, '/')) { // complete DOI
-        $doiId =  explode('/', $xml->identifier);
-        $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand($doiId[0], $doiId[1]));
+  // custom functionality targets only copernicus publication file
+  if (
+    $form_state->hasValue('copernicus_publication_file') &&
+    str_starts_with($form['#id'], 'edit-copernicus-publication-file')
+  ) {
+
+    if (!$form_state->hasAnyErrors()) {
+      $fid = reset($form_state->getValue('copernicus_publication_file'));
+      $file = \Drupal\file\Entity\File::load($fid);
+      $path = $file->getFileUri();
+      $xml = simplexml_load_string(file_get_contents($path));
+      // \Drupal::logger('file_ajax_callback')->notice( $xml->identifier);
+      if (!empty($xml->identifier)) { // empty tab
+        if (str_contains($xml->identifier, '/')) { // complete DOI
+          $doiId =  explode('/', $xml->identifier);
+          $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand($doiId[0], $doiId[1]));
+        }
+        else { // prefix only
+          $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand($xml->identifier));
+        }
       }
-      else { // prefix only
-        $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand($xml->identifier));
+      else {
+        $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand());
       }
+    } else {
+      // could not be uploaded
+      \Drupal::logger('managed_file')->warning(t('Something went wrong during the upload.'));
     }
-    else {
-      $response->addCommand(new \Drupal\copernicus_publication\Ajax\ManagedFileUploadCompleteEventCommand());
-    }
-  } else {
-    // could not be uploaded
-    \Drupal::logger('managed_file')->warning(t('Something went wrong during the upload.'));
   }
 
   return $response;

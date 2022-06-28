@@ -65,7 +65,7 @@ class UploadPublicationForm extends FormBase {
       '#type' => 'checkbox',
       '#title' => $this->t("Create the publication only in Drupal"),
     ];
-    $form['file'] = [
+    $form['copernicus_publication_file'] = [
       '#type' => 'managed_file',
       '#title' => t('Upload XML file'),
       '#required' => TRUE,
@@ -187,7 +187,7 @@ you will manually attach the PDF file to the newly created publication node.</b>
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $drupal_only = $form_state->getValue('drupal_only');
-    $fid = reset($form_state->getValue('file'));
+    $fid = reset($form_state->getValue('copernicus_publication_file'));
     $file = File::load($fid);
     $path = $file->getFileUri();
     if (!$drupal_only) {
