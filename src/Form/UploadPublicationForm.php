@@ -86,7 +86,7 @@ class UploadPublicationForm extends FormBase {
         'message' => [
           '#type' => 'markup',
           '#markup' => $this->t("The XML file must contain at least the following fields:
-            <b>DOI, creators, title, publisher, publicationYear, resourceTypeGeneral</b>."),
+            <b>creators, title, publisher, publicationYear, resourceTypeGeneral</b>."),
         ],
       ]
     ];
