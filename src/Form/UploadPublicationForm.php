@@ -73,7 +73,7 @@ class UploadPublicationForm extends FormBase {
       '#multiple' => FALSE,
       '#default_value' => '',
       '#upload_validators' => [
-        'file_validate_extensions' => ['xml']
+        'FileExtension' => ['extensions' => 'xml'],
       ],
     ];
     $form['warning'] = [
